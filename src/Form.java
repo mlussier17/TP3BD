@@ -73,5 +73,12 @@ public class Form {
 
             }
         });
+        BT_CLAdd.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFrame frame = new JFrame("ADDClientForm");
+                frame.setVisible(true);
+            }
+        });
     }
 }

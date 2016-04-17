@@ -34,4 +34,8 @@ public class Connection {
             sqle.getMessage();
         }
     }
+
+    public static java.sql.Connection get(){
+        return conn;
+    }
 }
