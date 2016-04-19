@@ -1,4 +1,8 @@
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.CallableStatement;
+import java.sql.SQLException;
 
 /**
  * Created by math on 2016-04-17.
@@ -12,14 +16,26 @@ public class ADDClientForm {
     private JPanel PAN_Insert;
 
     public ADDClientForm() {
-        frame = new JFrame("ADDClientForm");
-    }
-
-    public static void main(String[] args) {
-        //JFrame frame = new JFrame("ADDClientForm");
-        frame.setContentPane(new ADDClientForm().PAN_Labels);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
+        BT_Submit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(TF_Firstname.getText().trim().length() > 1){
+                    if(TF_Name.getText().trim().length() > 1){
+                        try {
+                            java.sql.Connection connexion = Connection.get();
+                            CallableStatement stm = connexion.prepareCall("{call PKGCLIENTS.INSERTION(?,?)}");
+                            stm.setString(1,TF_Name.getText());
+                            stm.setString(2,TF_Firstname.getText());
+                            stm.execute();
+                            System.out.println("Insertion fait");
+                            frame.dispose();
+                        }
+                        catch (SQLException sqle){
+                            System.err.println(sqle.getMessage());
+                        }
+                    }
+                }
+            }
+        });
     }
 }
