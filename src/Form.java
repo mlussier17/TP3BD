@@ -83,6 +83,7 @@ public class Form {
         //endregion
 
         //region client
+
         //Add client
         BT_CLAdd.addActionListener(new ActionListener() {
             @Override
@@ -151,6 +152,7 @@ public class Form {
         //endregion
 
         //region circuit
+
         //List circuit
         BT_CIRList.addActionListener(new ActionListener() {
             @Override
@@ -270,6 +272,7 @@ public class Form {
         //endregion
 
         //region Reservations
+
         //ADD RESERVATIONS
         BT_ClientsPerCircuits.addActionListener(new ActionListener() {
             @Override
@@ -315,7 +318,6 @@ public class Form {
                 frame.setVisible(true);
             }
         });
-
         //lISTER RESERVATIONS
         BT_RList.addActionListener(new ActionListener() {
             @Override
@@ -349,7 +351,6 @@ public class Form {
                 }
             }
         });
-
         //MODIFY RESERVATIONS
         BT_RModify.addActionListener(new ActionListener() {
             @Override
@@ -389,7 +390,8 @@ public class Form {
 
         //endregion
 
-        //REGION MONUMENTS
+        //region MONUMENTS
+
         //LIST MONUMENTS
         BT_MList.addActionListener(new ActionListener() {
             @Override
@@ -415,6 +417,7 @@ public class Form {
                 }
             }
         });
+
         //endregion
     }
 }
