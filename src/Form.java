@@ -29,8 +29,8 @@ public class Form {
     private JPanel PAN_Reservation;
     private JPanel PAN_List;
     private JButton BT_MList;
-    private JTable TB_Lists;
     private JButton BT_CIRList;
+    private JTable TAB_List;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Form");
@@ -58,7 +58,6 @@ public class Form {
             }
         });
 
-        // Disconnection button
         BT_Disconnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -66,20 +65,8 @@ public class Form {
             }
         });
 
-        //List button to list the client on a given circuit from (TA_CName)
-        BT_CList.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            }
-        });
-
-        //List button to list the monuments on a given circuit from (TA_CName)
-        BT_MList.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
+        //region client
+        //Add client
         BT_CLAdd.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -90,12 +77,16 @@ public class Form {
                 frame.setVisible(true);
             }
         });
+        //List client
         BT_CList.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    String[] tableColumnsName = {"col 1","col 2","col 3"};
-                    DefaultTableModel aModel = (DefaultTableModel) TB_Lists.getModel();
+                    DefaultTableModel model = (DefaultTableModel) TAB_List.getModel();
+                    model.setRowCount(0);
+
+                    String[] tableColumnsName = {"ID","Nom","Prenom"};
+                    DefaultTableModel aModel = (DefaultTableModel) TAB_List.getModel();
                     aModel.setColumnIdentifiers(tableColumnsName);
 
                     java.sql.Connection connexion = Connection.get();
@@ -112,43 +103,51 @@ public class Form {
                         }
                         aModel.addRow(objects);
                     }
-                    TB_Lists.setModel(aModel);
+                    TAB_List.setModel(aModel);
                 }
                 catch (SQLException sqle){
                     System.err.println(sqle.getMessage());
                 }
             }
         });
+        //Delete client
         BT_CLDelete.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    if (TB_Lists.getSelectedRowCount() > 0) {
-                        //TB_Lists.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-                        int rowIndex = TB_Lists.getSelectedRow();
+                    if (TAB_List.getSelectedRowCount() > 0) {
+                    int rowIndex = TAB_List.getSelectedRow();
 
-                        java.sql.Connection connexion = Connection.get();
-                        CallableStatement stm = connexion.prepareCall("{call PKGCLIENTS.REMOVE(?)}");
-                        stm.setInt(1, Integer.parseInt(TB_Lists.getModel().getValueAt(rowIndex,0).toString()));
-                        stm.execute();
-                        System.out.println("Suppression effectuer");
-                    }
-                }
-                catch (SQLException sqle){
-                    System.err.println(sqle.getMessage());
+                    java.sql.Connection connexion = Connection.get();
+                    CallableStatement stm = connexion.prepareCall("{call PKGCLIENTS.REMOVE(?)}");
+                    stm.setInt(1, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
+                    stm.execute();
+                    System.out.println("Suppression effectuer");
                 }
             }
+            catch (SQLException sqle){
+                System.err.println(sqle.getMessage());
+            }
+            }
         });
+
+        //endregion
+
+        //region circuit
+        //List circuit
         BT_CIRList.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    String[] tableColumnsName = {"col 1","col 2","col 3"};
-                    DefaultTableModel aModel = (DefaultTableModel) TB_Lists.getModel();
+                    DefaultTableModel model = (DefaultTableModel) TAB_List.getModel();
+                    model.setRowCount(0);
+
+                    String[] tableColumnsName = {"ID","Nom","Depart","Fin","Prix","Duree", "Clients maximum"};
+                    DefaultTableModel aModel = (DefaultTableModel) TAB_List.getModel();
                     aModel.setColumnIdentifiers(tableColumnsName);
 
                     java.sql.Connection connexion = Connection.get();
-                    CallableStatement stm = connexion.prepareCall("{? = call PKGCIRCUITS.LISTS}");
+                    CallableStatement stm = connexion.prepareCall("{? = call PKGCIRCUITS.LISTER}");
                     stm.registerOutParameter(1, OracleTypes.CURSOR);
                     stm.execute();
                     ResultSet result = (ResultSet)stm.getObject(1);
@@ -161,12 +160,47 @@ public class Form {
                         }
                         aModel.addRow(objects);
                     }
-                    TB_Lists.setModel(aModel);
+                    TAB_List.setModel(aModel);
                 }
                 catch (SQLException sqle){
                     System.err.println(sqle.getMessage());
                 }
             }
         });
+        //Add circuit
+        BT_CAdd.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFrame frame = new JFrame("AddCircuitForm");
+                frame.setContentPane(new AddCircuitForm().PAN_Circuits);
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                frame.pack();
+                frame.setVisible(true);
+            }
+        });
+        //Delete circuits
+        BT_CDelete.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    if (TAB_List.getSelectedRowCount() > 0) {
+                        int rowIndex = TAB_List.getSelectedRow();
+
+                        java.sql.Connection connexion = Connection.get();
+                        CallableStatement stm = connexion.prepareCall("{call PKGCIRCUITS.SUPPRIMER(?)}");
+                        stm.setInt(1, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
+                        stm.execute();
+                        System.out.println("Suppression effectuer");
+                    }
+                }
+                catch (SQLException sqle){
+                    System.err.println(sqle.getMessage());
+                }
+            }
+        });
+
+        //endregion
+
+
     }
 }

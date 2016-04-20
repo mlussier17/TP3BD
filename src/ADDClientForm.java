@@ -19,8 +19,8 @@ public class ADDClientForm {
         BT_Submit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(TF_Firstname.getText().trim().length() > 1){
-                    if(TF_Name.getText().trim().length() > 1){
+                if(TF_Firstname.getText().trim().length() > 0){
+                    if(TF_Name.getText().trim().length() > 0){
                         try {
                             java.sql.Connection connexion = Connection.get();
                             CallableStatement stm = connexion.prepareCall("{call PKGCLIENTS.INSERTION(?,?)}");
