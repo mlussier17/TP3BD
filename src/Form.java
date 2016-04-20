@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 
 /**
  * Created by 196128636 on 2016-04-15.
@@ -31,6 +32,17 @@ public class Form {
     private JButton BT_MList;
     private JButton BT_CIRList;
     private JTable TAB_List;
+    private JButton BT_SearchCircuits;
+    private JTextField TF_CircuitsName;
+    private JButton BT_ClientsPerCircuits;
+    private JButton BT_RModify;
+    private JButton BT_RList;
+    private JTextField TF_MName;
+    private JTextField TF_MDate;
+    private JTextArea TA_MHistoire;
+    private JButton BT_Previous;
+    private JButton BT_Next;
+    private JPanel PAN_Monuments;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Form");
@@ -46,6 +58,8 @@ public class Form {
         PAN_Reservation.setVisible(false);
         PAN_List.setVisible(false);
 
+        //region Connect/Disconnect
+
         // Connection button
         BT_Connect.addActionListener(new ActionListener() {
             @Override
@@ -58,12 +72,15 @@ public class Form {
             }
         });
 
+        //Disconnect button
         BT_Disconnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Connection.disconnect();
             }
         });
+
+        //endregion
 
         //region client
         //Add client
@@ -198,9 +215,206 @@ public class Form {
                 }
             }
         });
+        //Modify circuits
+        BT_CModify.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                    if (TAB_List.getSelectedRowCount() > 0) {
+                        int rowIndex = TAB_List.getSelectedRow();
+                        JFrame frame = new JFrame("AddCircuitForm");
+                        frame.setContentPane(new AddCircuitForm(Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString())).PAN_Circuits);
+                        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                        frame.pack();
+                        frame.setVisible(true);
+                        //new AddCircuitForm().setTextField(Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
+
+                    }
+                }
+        });
+        //Search circuits per name
+        BT_SearchCircuits.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    DefaultTableModel model = (DefaultTableModel) TAB_List.getModel();
+                    model.setRowCount(0);
+
+                    String[] tableColumnsName = {"Nom", "Depart", "Fin", "Prix", "Duree", "Clients maximum"};
+                    DefaultTableModel aModel = (DefaultTableModel) TAB_List.getModel();
+                    aModel.setColumnIdentifiers(tableColumnsName);
+
+                    java.sql.Connection connexion = Connection.get();
+                    CallableStatement stm = connexion.prepareCall("{? = call PKGCIRCUITS.RECHERCHER(?)}");
+                    stm.registerOutParameter(1, OracleTypes.CURSOR);
+                    stm.setString(2, TF_CircuitsName.getText() + "%");
+                    stm.execute();
+                    ResultSet result = (ResultSet) stm.getObject(1);
+                    java.sql.ResultSetMetaData rsmd = result.getMetaData();
+                    int colNo = rsmd.getColumnCount();
+                    while(result.next()){
+                        Object[] objects = new Object[colNo];
+                        for(int i=0;i<colNo;i++){
+                            objects[i]=result.getObject(i+1);
+                        }
+                        aModel.addRow(objects);
+                    }
+                    TAB_List.setModel(aModel);
+
+                }
+                catch (SQLException sqle){
+                    System.err.println(sqle.getMessage());
+                }
+            }
+        });
 
         //endregion
 
+        //region Reservations
+        //ADD RESERVATIONS
+        BT_ClientsPerCircuits.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    DefaultTableModel model = (DefaultTableModel) TAB_List.getModel();
+                    model.setRowCount(0);
 
+                    String[] tableColumnsName = {"Nom", "Prenom"};
+                    DefaultTableModel aModel = (DefaultTableModel) TAB_List.getModel();
+                    aModel.setColumnIdentifiers(tableColumnsName);
+
+                    java.sql.Connection connexion = Connection.get();
+                    CallableStatement stm = connexion.prepareCall("{? = call PKGCIRCUITS.LISTS(?)}");
+                    stm.registerOutParameter(1, OracleTypes.CURSOR);
+                    stm.setString(2, TF_CircuitsName.getText());
+                    stm.execute();
+                    ResultSet result = (ResultSet) stm.getObject(1);
+                    java.sql.ResultSetMetaData rsmd = result.getMetaData();
+                    int colNo = rsmd.getColumnCount();
+                    while(result.next()){
+                        Object[] objects = new Object[colNo];
+                        for(int i=0;i<colNo;i++){
+                            objects[i]=result.getObject(i+1);
+                        }
+                        aModel.addRow(objects);
+                    }
+                    TAB_List.setModel(aModel);
+
+                }
+                catch (SQLException sqle){
+                    System.err.println(sqle.getMessage());
+                }
+            }
+        });
+        BT_RAdd.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFrame frame = new JFrame("AddReservationForm");
+                frame.setContentPane(new AddReservationForm().PAN_Reservation);
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                frame.pack();
+                frame.setVisible(true);
+            }
+        });
+
+        //lISTER RESERVATIONS
+        BT_RList.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    DefaultTableModel model = (DefaultTableModel) TAB_List.getModel();
+                    model.setRowCount(0);
+
+                    String[] tableColumnsName = {"ID","ID Client","ID Circuit","DateReservation","DateLimite"};
+                    DefaultTableModel aModel = (DefaultTableModel) TAB_List.getModel();
+                    aModel.setColumnIdentifiers(tableColumnsName);
+
+                    java.sql.Connection connexion = Connection.get();
+                    CallableStatement stm = connexion.prepareCall("{? = call PKGRESERVATIONS.LISTER}");
+                    stm.registerOutParameter(1, OracleTypes.CURSOR);
+                    stm.execute();
+                    ResultSet result = (ResultSet)stm.getObject(1);
+                    java.sql.ResultSetMetaData rsmd = result.getMetaData();
+                    int colNo = rsmd.getColumnCount();
+                    while(result.next()){
+                        Object[] objects = new Object[colNo];
+                        for(int i=0;i<colNo;i++){
+                            objects[i]=result.getObject(i+1);
+                        }
+                        aModel.addRow(objects);
+                    }
+                    TAB_List.setModel(aModel);
+                }
+                catch (SQLException sqle){
+                    System.err.println(sqle.getMessage());
+                }
+            }
+        });
+
+        //MODIFY RESERVATIONS
+        BT_RModify.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (TAB_List.getSelectedRowCount() > 0) {
+                    int rowIndex = TAB_List.getSelectedRow();
+                    JFrame frame = new JFrame("AddCircuitForm");
+                    frame.setContentPane(new AddReservationForm(Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString())).PAN_Reservation);
+                    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                    frame.pack();
+                    frame.setVisible(true);
+
+                }
+            }
+        });
+        //DELETE RESERVATIONS
+        BT_RDelete.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    if (TAB_List.getSelectedRowCount() > 0) {
+                        int rowIndex = TAB_List.getSelectedRow();
+
+                        java.sql.Connection connexion = Connection.get();
+                        CallableStatement stm = connexion.prepareCall("{call PKGRESERVATIONS.SUPPRIMER(?)}");
+                        stm.setInt(1, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
+                        stm.execute();
+                        System.out.println("Suppression effectuer");
+                        Date date = new Date();
+                    }
+                }
+                catch (SQLException sqle){
+                    System.err.println(sqle.getMessage());
+                }
+            }
+        });
+
+        //endregion
+
+        //REGION MONUMENTS
+        //LIST MONUMENTS
+        BT_MList.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    if (TAB_List.getSelectedRowCount() > 0) {
+                        int rowIndex = TAB_List.getSelectedRow();
+
+                        java.sql.Connection connexion = Connection.get();
+                        CallableStatement stm = connexion.prepareCall("{? = call PKGMONUMENTS.LISTER(?)}");
+                        stm.registerOutParameter(1, OracleTypes.CURSOR);
+                        stm.setInt(2, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
+                        stm.execute();
+                        ResultSet result = (ResultSet)stm.getObject(1);
+                        result.next();
+                        TF_MName.setText(result.getObject(1).toString());
+                        TF_MDate.setText(result.getObject(2).toString());
+                        TA_MHistoire.setText(result.getClob(3).toString());
+                    }
+                }
+                catch (SQLException sqle){
+                    System.err.println(sqle.getMessage());
+                }
+            }
+        });
+        //endregion
     }
 }
