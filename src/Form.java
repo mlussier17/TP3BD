@@ -43,6 +43,8 @@ public class Form {
     private JButton BT_Previous;
     private JButton BT_Next;
     private JPanel PAN_Monuments;
+    private ResultSet result;
+    private CallableStatement stm;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Form");
@@ -108,10 +110,11 @@ public class Form {
                     aModel.setColumnIdentifiers(tableColumnsName);
 
                     java.sql.Connection connexion = Connection.get();
-                    CallableStatement stm = connexion.prepareCall("{? = call PKGCLIENTS.LISTER}");
+                    stm = connexion.prepareCall("{? = call PKGCLIENTS.LISTER}");
                     stm.registerOutParameter(1, OracleTypes.CURSOR);
                     stm.execute();
-                    ResultSet result = (ResultSet)stm.getObject(1);
+
+                    result = (ResultSet)stm.getObject(1);
                     java.sql.ResultSetMetaData rsmd = result.getMetaData();
                     int colNo = rsmd.getColumnCount();
                     while(result.next()){
@@ -401,11 +404,11 @@ public class Form {
                         int rowIndex = TAB_List.getSelectedRow();
 
                         java.sql.Connection connexion = Connection.get();
-                        CallableStatement stm = connexion.prepareCall("{? = call PKGMONUMENTS.LISTER(?)}");
+                        stm = connexion.prepareCall("{? = call PKGMONUMENTS.LISTER(?)}", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
                         stm.registerOutParameter(1, OracleTypes.CURSOR);
                         stm.setInt(2, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
                         stm.execute();
-                        ResultSet result = (ResultSet)stm.getObject(1);
+                        result = (ResultSet)stm.getObject(1);
                         result.next();
                         TF_MName.setText(result.getObject(1).toString());
                         TF_MDate.setText(result.getObject(2).toString());
@@ -417,7 +420,37 @@ public class Form {
                 }
             }
         });
+        //NEXT MONUMENTS
+        BT_Next.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    result.next();
+                    TF_MName.setText(result.getObject(1).toString());
+                    TF_MDate.setText(result.getObject(2).toString());
+                    TA_MHistoire.setText(result.getClob(3).toString());
+                }
+                catch (SQLException sqle){
+                    System.err.println(sqle.getMessage());
+                }
+            }
+        });
 
+        //PREVIOUS MONUMENTS
+        BT_Previous.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    result.previous();
+                    TF_MName.setText(result.getObject(1).toString());
+                    TF_MDate.setText(result.getObject(2).toString());
+                    TA_MHistoire.setText(result.getClob(3).toString());
+                }
+                catch (SQLException sqle){
+                    System.err.println(sqle.getMessage());
+                }
+            }
+        });
         //endregion
     }
 }
