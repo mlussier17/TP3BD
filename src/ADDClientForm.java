@@ -28,7 +28,6 @@ public class ADDClientForm {
                             stm.setString(2,TF_Firstname.getText());
                             stm.execute();
                             System.out.println("Insertion fait");
-                            frame.dispose();
                         }
                         catch (SQLException sqle){
                             System.err.println(sqle.getMessage());

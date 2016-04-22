@@ -6,9 +6,6 @@ import java.awt.event.ActionListener;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by 196128636 on 2016-04-20.
@@ -39,7 +36,6 @@ public class AddReservationForm {
                         stm.setDate(4, java.sql.Date.valueOf(java.time.LocalDate.now().plusDays(7)));
                         stm.execute();
                         System.out.println("Insertion fait");
-                        //frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     } catch (SQLException sqle) {
                         System.err.println(sqle.getMessage());
                     }
@@ -70,7 +66,6 @@ public class AddReservationForm {
                         stm.setDate(5, java.sql.Date.valueOf(java.time.LocalDate.now().plusDays(7)));
                         stm.execute();
                         System.out.println("Modification fait");
-                        //frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     } catch (SQLException sqle) {
                         System.err.println(sqle.getMessage());
                     }

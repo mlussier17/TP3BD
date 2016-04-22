@@ -1,14 +1,12 @@
 import oracle.jdbc.OracleTypes;
-
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 
 /**
@@ -143,7 +141,6 @@ public class Form {
                 try {
                     if (TAB_List.getSelectedRowCount() > 0) {
                         int rowIndex = TAB_List.getSelectedRow();
-
                         java.sql.Connection connexion = Connection.get();
                         CallableStatement stm = connexion.prepareCall("{call PKGCLIENTS.REMOVE(?)}");
                         stm.setInt(1, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
@@ -381,14 +378,30 @@ public class Form {
             public void actionPerformed(ActionEvent e) {
                 try {
                     if (TAB_List.getSelectedRowCount() > 0) {
+                        java.sql.Connection connexion = Connection.get();
                         int rowIndex = TAB_List.getSelectedRow();
 
-                        java.sql.Connection connexion = Connection.get();
+                        stm = connexion.prepareCall("{? = call PKGRESERVATIONS.LISTERRESERVATIONS(?)}");
+                        stm.registerOutParameter(1, OracleTypes.CURSOR);
+                        stm.setInt(2, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
+                        stm.execute();
+                        ResultSet result = (ResultSet)stm.getObject(1);
+                        result.next();
+                        Date limit = result.getDate(4);
+                        LocalDate localDate = LocalDate.parse( new SimpleDateFormat("yyyy-MM-dd").format(limit) );
+                        Date input = new Date();
+                        LocalDate date = input.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                        long penalty = date.getDayOfMonth() - localDate.getDayOfMonth();
+
+                        if (penalty > 1){
+                            JOptionPane.showMessageDialog(null, "Penalty","Penalty",JOptionPane.WARNING_MESSAGE);
+                        }
+
+
                         CallableStatement stm = connexion.prepareCall("{call PKGRESERVATIONS.SUPPRIMER(?)}");
                         stm.setInt(1, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
                         stm.execute();
                         System.out.println("Suppression effectuer");
-                        Date date = new Date();
                     }
                 }
                 catch (SQLException sqle){
