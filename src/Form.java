@@ -1,12 +1,14 @@
 import oracle.jdbc.OracleTypes;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.sql.*;
 import java.util.Date;
 
 /**
@@ -43,8 +45,11 @@ public class Form {
     private JButton BT_Previous;
     private JButton BT_Next;
     private JPanel PAN_Monuments;
+    private JLabel LB_MImage;
+    private JLabel LB_Image;
     private ResultSet result;
     private CallableStatement stm;
+    private PreparedStatement pstm;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Form");
@@ -137,18 +142,18 @@ public class Form {
             public void actionPerformed(ActionEvent e) {
                 try {
                     if (TAB_List.getSelectedRowCount() > 0) {
-                    int rowIndex = TAB_List.getSelectedRow();
+                        int rowIndex = TAB_List.getSelectedRow();
 
-                    java.sql.Connection connexion = Connection.get();
-                    CallableStatement stm = connexion.prepareCall("{call PKGCLIENTS.REMOVE(?)}");
-                    stm.setInt(1, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
-                    stm.execute();
-                    System.out.println("Suppression effectuer");
+                        java.sql.Connection connexion = Connection.get();
+                        CallableStatement stm = connexion.prepareCall("{call PKGCLIENTS.REMOVE(?)}");
+                        stm.setInt(1, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
+                        stm.execute();
+                        System.out.println("Suppression effectuer");
+                    }
                 }
-            }
-            catch (SQLException sqle){
-                System.err.println(sqle.getMessage());
-            }
+                catch (SQLException sqle){
+                    System.err.println(sqle.getMessage());
+                }
             }
         });
 
@@ -276,7 +281,7 @@ public class Form {
 
         //region Reservations
 
-        //ADD RESERVATIONS
+        //LIST CLIENT PER CIRCUITS
         BT_ClientsPerCircuits.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -311,6 +316,7 @@ public class Form {
                 }
             }
         });
+        //ADD RESERVATIONS
         BT_RAdd.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -402,17 +408,17 @@ public class Form {
                 try {
                     if (TAB_List.getSelectedRowCount() > 0) {
                         int rowIndex = TAB_List.getSelectedRow();
-
                         java.sql.Connection connexion = Connection.get();
-                        stm = connexion.prepareCall("{? = call PKGMONUMENTS.LISTER(?)}", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-                        stm.registerOutParameter(1, OracleTypes.CURSOR);
-                        stm.setInt(2, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex,0).toString()));
-                        stm.execute();
-                        result = (ResultSet)stm.getObject(1);
+                        String sqlSelect = "SELECT NOM, DATECONSTRUCTION, HISTORY, IMAGE FROM MONUMENTS INNER JOIN MONUMENTS_CIRCUITS ON IDMONUMENT = MONUMENTS.ID WHERE IDCIRCUIT = ?";
+                        PreparedStatement pstm = connexion.prepareStatement(sqlSelect,ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
+                        pstm.setInt(1, Integer.parseInt(TAB_List.getModel().getValueAt(rowIndex, 0).toString()));
+
+                        result = pstm.executeQuery();
                         result.next();
+
                         TF_MName.setText(result.getObject(1).toString());
                         TF_MDate.setText(result.getObject(2).toString());
-                        TA_MHistoire.setText(result.getClob(3).toString());
+                        TA_MHistoire.setText(result.getObject(3).toString());
                     }
                 }
                 catch (SQLException sqle){
@@ -428,14 +434,13 @@ public class Form {
                     result.next();
                     TF_MName.setText(result.getObject(1).toString());
                     TF_MDate.setText(result.getObject(2).toString());
-                    TA_MHistoire.setText(result.getClob(3).toString());
+                    TA_MHistoire.setText(result.getObject(3).toString());
                 }
                 catch (SQLException sqle){
                     System.err.println(sqle.getMessage());
                 }
             }
         });
-
         //PREVIOUS MONUMENTS
         BT_Previous.addActionListener(new ActionListener() {
             @Override
@@ -444,7 +449,7 @@ public class Form {
                     result.previous();
                     TF_MName.setText(result.getObject(1).toString());
                     TF_MDate.setText(result.getObject(2).toString());
-                    TA_MHistoire.setText(result.getClob(3).toString());
+                    TA_MHistoire.setText(result.getObject(3).toString());
                 }
                 catch (SQLException sqle){
                     System.err.println(sqle.getMessage());
